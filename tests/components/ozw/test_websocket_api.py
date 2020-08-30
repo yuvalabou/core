@@ -34,6 +34,7 @@ from .common import MQTTMessage, setup_ozw
 
 from tests.async_mock import AsyncMock, patch
 from tests.common import (
+    MockConfigEntry,
     MockModule,
     mock_device_registry,
     mock_integration,
@@ -161,6 +162,8 @@ def zwave_integration_fixture(hass, zwave_migration_data):
     )
     zwave_integration = mock_integration(hass, zwave_module)
     hass.config.components.add("zwave")
+    MockConfigEntry(domain="zwave").add_to_hass(hass)
+
     return zwave_integration
 
 
@@ -168,6 +171,8 @@ async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integra
     """Test the zwave to ozw migration websocket api."""
     await setup_ozw(hass, fixture=migration_data)
     client = await hass_ws_client(hass)
+
+    assert hass.config_entries.async_entries("zwave")
 
     await client.send_json({ID: 5, TYPE: "ozw/migrate_zwave", "dry_run": False})
     msg = await client.receive_json()
@@ -231,6 +236,9 @@ async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integra
     assert power_entry.unique_id == "1-32-562950495305746"
     assert power_entry.name == ZWAVE_POWER_NAME
     assert power_entry.icon == ZWAVE_POWER_ICON
+
+    # check that the zwave config entry has been removed
+    assert not hass.config_entries.async_entries("zwave")
 
 
 async def test_migrate_zwave_dry_run(
