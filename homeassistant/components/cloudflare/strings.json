@@ -1,0 +1,22 @@
+{
+  "config": {
+    "flow_title": "Cloudflare: {name}",
+    "step": {
+      "user": {
+        "title": "Connect to Cloudflare",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "zone": "Zone",
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}
