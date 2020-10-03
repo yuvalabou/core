@@ -1,21 +1,23 @@
 """Update the IP addresses of your Cloudflare DNS records."""
 from datetime import timedelta
 import logging
+from typing import Dict, List
 
-from pycfdns import CloudflareUpdater
+from pycfdns import CloudflareException, CloudflareUpdater
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_SOURCE, CONF_ZONE
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
+
+from .const import CONF_RECORDS, DATA_UNDO_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_RECORDS = "records"
-
-DOMAIN = "cloudflare"
-
-INTERVAL = timedelta(minutes=60)
+UPDATE_INTERVAL = timedelta(minutes=60)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -32,43 +34,75 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
-    """Set up the Cloudflare component."""
+async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+    """Set up the component."""
+    hass.data.setdefault(DOMAIN, {})
 
-    cfupdate = CloudflareUpdater()
-    email = config[DOMAIN][CONF_EMAIL]
-    key = config[DOMAIN][CONF_API_KEY]
-    zone = config[DOMAIN][CONF_ZONE]
-    records = config[DOMAIN][CONF_RECORDS]
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={CONF_SOURCE: SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
+        )
 
-    def update_records_interval(now):
-        """Set up recurring update."""
-        _update_cloudflare(cfupdate, email, key, zone, records)
 
-    def update_records_service(now):
-        """Set up service for manual trigger."""
-        _update_cloudflare(cfupdate, email, key, zone, records)
-
-    track_time_interval(hass, update_records_interval, INTERVAL)
-    hass.services.register(DOMAIN, "update_records", update_records_service)
     return True
 
 
-def _update_cloudflare(cfupdate, email, key, zone, records):
-    """Update DNS records for a given zone."""
-    _LOGGER.debug("Starting update for zone %s", zone)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Cloudflare from a config entry."""
+    cfupdate = CloudflareUpdater(
+        async_get_clientsession(hass),
+        entry.data[CONF_EMAIL],
+        entry.data[CONF_API_TOKEN],
+        entry.data[CONF_ZONE],
+        entry.data[CONF_RECORDS],
+    )
+    
+    try:
+        zone_id = await cfupdate.get_zone_id()
+    except CloudflareException as error:
+        raise ConfigEntryNotReady from error
 
-    headers = cfupdate.set_header(email, key)
-    _LOGGER.debug("Header data defined as: %s", headers)
+    async def update_records_interval(now):
+        """Set up recurring update."""
+        try:
+            await _async_update_cloudflare(cfupdate, zone_id)
+        except CloudflareException as error:
+            _LOGGER.error("Error updating zone: %s", error)
 
-    zoneid = cfupdate.get_zoneID(headers, zone)
-    _LOGGER.debug("Zone ID is set to: %s", zoneid)
+    async def update_records_service(call):
+        """Set up service for manual trigger."""
+        try:
+            await _async_update_cloudflare(cfupdate, zone_id)
+        except CloudflareException as error:
+            _LOGGER.error("Error updating zone: %s", error)
 
-    update_records = cfupdate.get_recordInfo(headers, zoneid, zone, records)
-    _LOGGER.debug("Records: %s", update_records)
+    undo_interval = async_track_time_interval(hass, update_records_interval, UPDATE_INTERVAL)
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
 
-    result = cfupdate.update_records(headers, zoneid, update_records)
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_UNDO_UPDATE_INTERVAL: undo_interval,
+    }
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Unload Cloudflare config entry."""
+    hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_INTERVAL]()
+    hass.data[DOMAIN].pop(entry.entry_id)
+
+    return True
+
+
+async def _async_update_cloudflare(cfupdate: CloudflareUpdater, zone_id: str):
+    _LOGGER.debug("Starting update for zone %s (%s)", cfupdate.zone, zone_id)
+
+    records = await cfupdate.get_record_info(zone_id)
+    _LOGGER.debug("Records: %s", records)
+
+    await cfupdate.update_records(zone_id, records)
     _LOGGER.debug("Update for zone %s is complete", zone)
-
-    if result is not True:
-        _LOGGER.warning(result)
