@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cfupdate = CloudflareUpdater(
         async_get_clientsession(hass),
         entry.data[CONF_EMAIL],
-        entry.data[CONF_API_TOKEN],
+        entry.data[CONF_API_KEY],
         entry.data[CONF_ZONE],
         entry.data[CONF_RECORDS],
     )
