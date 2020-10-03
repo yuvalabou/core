@@ -1,7 +1,7 @@
 """Update the IP addresses of your Cloudflare DNS records."""
 from datetime import timedelta
 import logging
-from typing import Dict, List
+from typing import Dict
 
 from pycfdns import CloudflareException, CloudflareUpdater
 import voluptuous as vol
@@ -11,6 +11,7 @@ from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_SOURCE, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_RECORDS, DATA_UNDO_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
@@ -46,7 +47,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
                 data=config[DOMAIN],
             )
         )
-
 
     return True
 
