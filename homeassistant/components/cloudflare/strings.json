@@ -7,7 +7,7 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "zone": "Zone",
+          "zone": "Zone"
         }
       }
     },
