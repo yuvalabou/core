@@ -1,5 +1,6 @@
 """Config flow for Cloudflare integration."""
 import logging
+from typing import Optional
 
 from pycfdns import CloudflareUpdater
 import voluptuous as vol
@@ -13,7 +14,9 @@ from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
+from .const import CONF_RECORDS
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,12 +25,12 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_EMAIL): str, 
         vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_ZONE): str
+        vol.Required(CONF_ZONE): str,
     }
 )
 
 
-async def validate_input(hass: HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -37,7 +40,7 @@ async def validate_input(hass: HomeAssistant, data):
         data[CONF_EMAIL],
         data[CONF_TOKEN],
         data[CONF_ZONE],
-        {},
+        data.get(CONF_RECORDS, []),
     )
 
     try:
@@ -55,8 +58,17 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_CLOUD_PUSH
 
+    async def async_step_import(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Handle a flow initiated by configuration file."""
+        return await self.async_step_user(user_input)
+
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
+        """Handle a flow initiated by the user."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         errors = {}
 
         if user_input is not None:
