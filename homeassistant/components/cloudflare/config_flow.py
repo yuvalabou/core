@@ -1,6 +1,6 @@
 """Config flow for Cloudflare integration."""
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from pycfdns import CloudflareUpdater
 import voluptuous as vol
@@ -30,7 +30,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict):
+async def validate_input(hass: HomeAssistant, data: Dict):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -74,12 +74,15 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                # setting unique id as multiple entries may be supported in future update.
+                await self.async_set_unique_id(user_input[CONF_ZONE])
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
