@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from pycfdns import CloudflareUpdater
+from pycfdns import CloudflareException, CloudflareUpdater
 import voluptuous as vol
 
 from homeassistant.config_entries import (
