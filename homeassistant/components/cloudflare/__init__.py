@@ -14,11 +14,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_RECORDS, DATA_UNDO_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
+from .const import CONF_RECORDS, DATA_UNDO_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
 _LOGGER = logging.getLogger(__name__)
-
-UPDATE_INTERVAL = timedelta(minutes=60)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -66,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except CloudflareException as error:
         raise ConfigEntryNotReady from error
 
-    async def update_records_interval(now):
+    async def update_records(now):
         """Set up recurring update."""
         try:
             await _async_update_cloudflare(cfupdate, zone_id)
@@ -80,12 +78,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except CloudflareException as error:
             _LOGGER.error("Error updating zone: %s", error)
 
-    undo_interval = async_track_time_interval(hass, update_records_interval, UPDATE_INTERVAL)
-    hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
+    update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
+    undo_interval = async_track_time_interval(hass, update_records, update_interval)
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_UNDO_UPDATE_INTERVAL: undo_interval,
     }
+
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
 
     return True
 
