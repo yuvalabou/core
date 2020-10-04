@@ -9,7 +9,7 @@ CONF_RECORDS = "records"
 DATA_UNDO_UPDATE_INTERVAL = "undo_update_interval"
 
 # Defaults
-DEFAULT_UPDATE_INTERVAL = 60 # in minutes
+DEFAULT_UPDATE_INTERVAL = 60  # in minutes
 
 # Services
 SERVICE_UPDATE_RECORDS = "update_records"
