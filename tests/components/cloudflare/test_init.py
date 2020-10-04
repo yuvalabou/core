@@ -1,4 +1,4 @@
-"""Test the Cloudflare config flow."""
+"""Test the Cloudflare integration."""
 from pycfdns import CloudflareException
 
 from homeassistant.components.couldflare.const import CONF_RECORDS, DOMAIN
