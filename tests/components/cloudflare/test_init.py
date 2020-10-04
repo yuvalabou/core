@@ -39,7 +39,7 @@ async def test_import_from_yaml(hass) -> None:
 
 async def test_unload_entry(hass, cfupdate):
     """Test successful unload of entry."""
-    #entry = await init_integration(hass)
+    entry = await init_integration(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
