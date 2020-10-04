@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -77,7 +76,3 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
