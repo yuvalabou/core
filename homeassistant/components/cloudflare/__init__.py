@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_ZONE],
         entry.data[CONF_RECORDS],
     )
-    
+
     try:
         zone_id = await cfupdate.get_zone_id()
     except CloudflareException as error:
@@ -69,14 +69,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await _async_update_cloudflare(cfupdate, zone_id)
         except CloudflareException as error:
-            _LOGGER.error("Error updating zone: %s", error)
+            _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
     async def update_records_service(call):
         """Set up service for manual trigger."""
         try:
             await _async_update_cloudflare(cfupdate, zone_id)
         except CloudflareException as error:
-            _LOGGER.error("Error updating zone: %s", error)
+            _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
     update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
     undo_interval = async_track_time_interval(hass, update_records, update_interval)
@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Cloudflare config entry."""
     hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_INTERVAL]()
     hass.data[DOMAIN].pop(entry.entry_id)
@@ -99,10 +99,10 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 
 async def _async_update_cloudflare(cfupdate: CloudflareUpdater, zone_id: str):
-    _LOGGER.debug("Starting update for zone %s (%s)", cfupdate.zone, zone_id)
+    _LOGGER.debug("Starting update for zone %s", cfupdate.zone)
 
     records = await cfupdate.get_record_info(zone_id)
     _LOGGER.debug("Records: %s", records)
 
     await cfupdate.update_records(zone_id, records)
-    _LOGGER.debug("Update for zone %s is complete", zone)
+    _LOGGER.debug("Update for zone %s is complete", cfupdate.zone)
