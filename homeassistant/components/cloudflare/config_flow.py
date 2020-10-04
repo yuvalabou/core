@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -38,7 +39,9 @@ async def validate_input(hass: HomeAssistant, data: Dict):
         data.get(CONF_RECORDS, []),
     )
 
-    await cfupdate.get_zone_id()
+    zone_id = await cfupdate.get_zone_id()
+    if not zone_id:
+        raise InvalidZone
 
     return {"title": data[CONF_ZONE]}
 
@@ -65,14 +68,19 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+            except InvalidZone:
+                errors["base"] = "invalid_zone"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # setting unique id as multiple entries may be supported in future update.
                 await self.async_set_unique_id(user_input[CONF_ZONE])
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+
+class InvalidZone(HomeAssistantError):
+    """Error to indicate we cant validate zone exists in account."""
