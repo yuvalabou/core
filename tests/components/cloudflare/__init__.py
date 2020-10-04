@@ -1,10 +1,6 @@
 """Tests for the Cloudflare integration."""
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_EMAIL,
-    CONF_ZONE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry

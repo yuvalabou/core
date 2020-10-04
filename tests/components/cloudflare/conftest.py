@@ -4,12 +4,11 @@ from pytest import fixture
 
 from tests.async_mock import AsyncMock, patch
 
+
 @fixture
 def cfupdate(hass):
     """Mock the CloudflareUpdater for easier testing."""
-    with patch(
-        "homeassistant.components.cloudflare.CloudflareUpdater"
-    ) as mock_api:
+    with patch("homeassistant.components.cloudflare.CloudflareUpdater") as mock_api:
         instance = mock_api.return_value
 
         cf_records = [
@@ -30,7 +29,7 @@ def cfupdate(hass):
                     "proxied": True,
                     "content": "127.0.0.1",
                 }
-            )
+            ),
         ]
 
         instance.get_record_info = AsyncMock(return_value=cf_records)
