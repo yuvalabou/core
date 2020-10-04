@@ -49,15 +49,15 @@ async def test_user_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
+async def test_user_form_invalid zone(hass):
+    """Test we handle invalid zone error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.cloudflare.CloudflareUpdater.get_zone_id",
-        side_effect=Exception(),
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -65,7 +65,7 @@ async def test_user_form_cannot_connect(hass):
         )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "invalid_zone"}
 
 
 async def test_user_form_unexpected_exception(hass):
