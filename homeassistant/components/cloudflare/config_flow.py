@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): str, 
+        vol.Required(CONF_EMAIL): str,
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_ZONE): str,
     }
@@ -34,7 +34,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     cfupdate = CloudflareUpdater(
         async_get_clientsession(),
         data[CONF_EMAIL],
-        data[CONF_TOKEN],
+        data[CONF_API_KEY],
         data[CONF_ZONE],
         data.get(CONF_RECORDS, []),
     )
