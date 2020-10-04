@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Dict
 
-from pycfdns import CloudflareException, CloudflareUpdater
+from pycfdns import CloudflareUpdater
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -67,21 +67,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         zone_id = await cfupdate.get_zone_id()
-    except CloudflareException as error:
+    except Exception as error:
         raise ConfigEntryNotReady from error
 
     async def update_records(now):
         """Set up recurring update."""
         try:
             await _async_update_cloudflare(cfupdate, zone_id)
-        except CloudflareException as error:
+        except Exception as error:
             _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
     async def update_records_service(call):
         """Set up service for manual trigger."""
         try:
             await _async_update_cloudflare(cfupdate, zone_id)
-        except CloudflareException as error:
+        except Exception as error:
             _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
     update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
