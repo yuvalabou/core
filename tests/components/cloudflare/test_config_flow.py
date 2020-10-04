@@ -44,6 +44,9 @@ async def test_user_form(hass):
     assert result["title"] == "mock.com"
     assert result["data"] == {**USER_INPUT}
 
+    assert result["result"]
+    assert result["result"].unique_id == "mock.com"
+
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -51,7 +54,7 @@ async def test_user_form(hass):
 async def test_user_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     with patch(
