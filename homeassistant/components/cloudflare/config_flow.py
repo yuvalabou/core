@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from pycfdns import CloudflareException, CloudflareUpdater
+from pycfdns import CloudflareUpdater
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, ConfigFlow
@@ -41,7 +41,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
 
     try:
         await cfupdate.get_zone_id()
-    except CloudflareException as error:
+    except Exception as error:
         raise CannotConnect from error
 
     # Return info that you want to store in the config entry.
