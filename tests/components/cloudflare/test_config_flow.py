@@ -55,7 +55,7 @@ async def test_user_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.cloudflare.CloudflareUpdater",
+        "homeassistant.components.cloudflare.CloudflareUpdater.get_zone_id",
         side_effect=CloudflareException(),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -74,7 +74,7 @@ async def test_user_form_unexpected_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.cloudflare.CloudflareUpdater",
+        "homeassistant.components.cloudflare.CloudflareUpdater.get_zone_id",
         side_effect=Exception(),
     ):
         result = await hass.config_entries.flow.async_configure(
