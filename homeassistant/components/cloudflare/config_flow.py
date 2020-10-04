@@ -39,12 +39,8 @@ async def validate_input(hass: HomeAssistant, data: Dict):
         data.get(CONF_RECORDS, []),
     )
 
-    try:
-        await cfupdate.get_zone_id()
-    except Exception as error:
-        raise CannotConnect from error
+    await cfupdate.get_zone_id()
 
-    # Return info that you want to store in the config entry.
     return {"title": data[CONF_ZONE]}
 
 
@@ -70,8 +66,6 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
