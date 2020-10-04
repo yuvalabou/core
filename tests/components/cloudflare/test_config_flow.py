@@ -1,6 +1,4 @@
 """Test the Cloudflare config flow."""
-from pycfdns import CloudflareException
-
 from homeassistant.components.cloudflare.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
@@ -59,7 +57,7 @@ async def test_user_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.cloudflare.CloudflareUpdater.get_zone_id",
-        side_effect=CloudflareException(),
+        side_effect=Exception(),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
