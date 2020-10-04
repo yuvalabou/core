@@ -5,11 +5,7 @@ from typing import Any, Dict, Optional
 from pycfdns import CloudflareException, CloudflareUpdater
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_PUSH,
-    SOURCE_USER,
-    ConfigFlow,
-)
+from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
