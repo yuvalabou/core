@@ -41,7 +41,7 @@ async def test_user_form(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test.com"
+    assert result["title"] == "mock.com"
     assert result["data"] == {**USER_INPUT}
 
     assert len(mock_setup.mock_calls) == 1
